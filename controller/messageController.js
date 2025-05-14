@@ -5,7 +5,7 @@ const UserModel = require("../model/userModel");
 const MessageModel = require("../model/messageModel");
 
 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent/?key=${process.env.GEMINI_API_KEY}`
-
+// const fileMessageUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision/?key=${process.env.GEMINI_API_KEY}`
 const getAIResponse = async(message) => {
     // console.log('Message:',message)
   try {
@@ -26,13 +26,15 @@ activeDatabase()
 const userInputMessage = async(req,res) => {
     const {message} = req.body;
     const {email} = req;
-    // console.log("inputMessage:",message)
+    // const {file} = req.file;
+    // console.log("inputMessage:",message,file)
     const checkUser = await UserModel.findOne({email:email})
     if(!checkUser){
         return res.status(400).send("Invalid User");
     }
     try {
         const response = await getAIResponse(message);
+        //console.log("AI response:",response)
         const messageQuery = await MessageModel.create({userId:checkUser._id,message,response})
         res.status(200).send({messageQuery,success:true})
     } catch (error) {

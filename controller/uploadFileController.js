@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require("fs");
 const DocumentModel = require("../model/uploadFileModel");
 const UserModel = require("../model/userModel");
+const { default: mongoose } = require("mongoose");
 
 const uploadPath = path.join(__dirname,"../uploads");
 
@@ -103,4 +104,36 @@ const getAllDocuments = async(req,res) => {
     res.status(200).send({allDocuments,success:true})
 }
 
-module.exports = {handleUploadFile,upload,deleteUploadFile,editUploadFile,getAllDocuments}
+const getAllMessagesAndDocs = async(req,res) => {
+    const {email} = req;
+    const checkUser = await UserModel.findOne({email:email})
+    if(!checkUser){
+        return res.status(400).send("Invalid User");
+    }
+    if(checkUser.role !== "admin"){
+        return res.status(400).send("Only admin can upload file.");
+    }
+
+    const data = await UserModel.aggregate([
+        {$match:{_id:checkUser._id}},
+        {
+            $lookup:{
+                from:'messages',
+                localField:"userId",
+                foreignField:"checkUser._id",
+                as:'messages'
+            }
+        },
+        {
+            $lookup:{
+                from:'documents',
+                localField:"uploadedBy",
+                foreignField:"checkUser._id",
+                as:'documents'
+            }
+        }
+    ])
+    res.status(200).send({checkUser,data})
+}
+
+module.exports = {handleUploadFile,upload,deleteUploadFile,editUploadFile,getAllDocuments,getAllMessagesAndDocs}

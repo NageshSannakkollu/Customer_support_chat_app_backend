@@ -28,15 +28,15 @@ const userLogin = async(req,res) => {
     // console.log("Email,password:",email,password)
     const checkEmail = await UserModel.findOne({email:email})
     if(checkEmail === null){
-        return res.status(400).send("Invalid Email address");
+        return res.status(200).send({message:"Invalid Email address",success:false});
     }
     const isPasswordMatch = await bcrypt.compare(password,checkEmail.password);
     if(isPasswordMatch){
         const payload = {email:email}
         const jwtToken = jwt.sign(payload,process.env.MY_SECRET_KEY)
-        res.status(200).send({jwtToken:jwtToken,success:true})
+        res.status(200).send({jwtToken:jwtToken,message:"Login Success",success:true})
     }else{
-        res.status(200).send({message:"Password not matched.",success:false})
+        res.status(200).send({message:"Invalid Password.",success:false})
     }
 }
 
